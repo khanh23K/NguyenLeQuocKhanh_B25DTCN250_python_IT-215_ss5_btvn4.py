@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -16,35 +16,35 @@ class ProductUpdate(BaseModel):
 
 @app.put("/products/{product_id}")
 def update_product(product_id: int, product: ProductUpdate):
+
     product_found = False
-    current_product = None
-    for item in products:
-        if item["id"] == product_id:
+    index = -1
+
+    for i in range(len(products)):
+        if products[i]["id"] == product_id:
             product_found = True
-            current_product = item
+            index = i
             break
 
-    if not product_found:
-        raise HTTPException(status_code=404, detail="Product not found")
+    if product_found == False:
+        return {"detail": "Product not found"}
+
     for item in products:
         if item["code"] == product.code and item["id"] != product_id:
-            raise HTTPException(
-                status_code=400,
-                detail="Product code already exists"
-            )
+            return {"detail": "Product code already exists"}
+
     if product.name == "":
-        raise HTTPException(status_code=400, detail="Product name cannot be empty")
+        return {"detail": "Product name cannot be empty"}
 
     if product.price <= 0:
-        raise HTTPException(status_code=400, detail="Price must be greater than 0")
+        return {"detail": "Price must be greater than 0"}
 
     if product.stock < 0:
-        raise HTTPException(status_code=400, detail="Stock must be greater than or equal to 0")
+        return {"detail": "Stock must be greater than or equal to 0"}
 
-    # Cập nhật thông tin
-    current_product["code"] = product.code
-    current_product["name"] = product.name
-    current_product["price"] = product.price
-    current_product["stock"] = product.stock
+    products[index]["code"] = product.code
+    products[index]["name"] = product.name
+    products[index]["price"] = product.price
+    products[index]["stock"] = product.stock
 
-    return current_product
+    return products[index]
